@@ -100,6 +100,12 @@ func (bd *BidRepository) CreateBid(
 			bd.auctionEndTimeMap[bidValue.AuctionId] = auctionEntity.Timestamp.Add(bd.auctionInterval)
 			bd.auctionEndTimeMutex.Unlock()
 
+			now := time.Now()
+			if now.After(bd.auctionEndTimeMap[bidValue.AuctionId]) {
+				logger.Info("Bid rejected: auction time has passed")
+				return
+			}
+
 			if _, err := bd.Collection.InsertOne(ctx, bidEntityMongo); err != nil {
 				logger.Error("Error trying to insert bid", err)
 				return
